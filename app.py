@@ -505,7 +505,8 @@ elif st.session_state.selected_file:
     if st.button("返回主界面"):
         st.session_state.selected_file = None
         st.session_state.selected_file_content = ""
-else:
+# 只在非录音状态且没有其他状态时显示主界面
+if not st.session_state.recording and not st.session_state.show_calendar and not st.session_state.viewing_date and not st.session_state.selected_file:
     # 主界面
     st.header("🎤 语音识别与AI交互系统")
     st.info("请在侧边栏点击开始录音按钮开始使用")
