@@ -22,11 +22,12 @@ channels = 1  # mono channel
 dtype = 'int16'  # data type
 format_pcm = 'pcm'  # format of the audio data
 block_size = 3200  # number of frames per buffer
-# 生成时间戳文件名
+# 生成时间戳
 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-output_file_path = f'data/TXT/out_{timestamp}.txt'  # 输出文件路径
-cord_file_path = f'data/MD/cord_{timestamp}.md'  # AI回复文件路径
-audio_file_path = f'data/WAV/audio_{timestamp}.wav'  # 音频文件路径
+# 初始文件路径（临时使用）
+temp_output_file_path = f'data/TXT/out_{timestamp}.txt'  # 临时输出文件路径
+temp_cord_file_path = f'data/MD/cord_{timestamp}.md'  # 临时AI回复文件路径
+audio_file_path = f'data/WAV/audio_{timestamp}.wav'  # 音频文件路径（保持不变）
 
 # 提前初始化音频捕获和缓冲区
 p = pyaudio.PyAudio()
@@ -68,8 +69,8 @@ class Callback(RecognitionCallback):
                           rate=16000,
                           input=True)
         # 打开输出文件，准备写入识别结果
-        output_file = open(output_file_path, 'a', encoding='utf-8')
-        print(f'已打开输出文件: {output_file_path}')
+        output_file = open(temp_output_file_path, 'a', encoding='utf-8')
+        print(f'已打开输出文件: {temp_output_file_path}')
 
     def on_close(self) -> None:
         global mic
@@ -85,7 +86,7 @@ class Callback(RecognitionCallback):
         if output_file:
             output_file.close()
             output_file = None
-            print(f'已关闭输出文件: {output_file_path}')
+            print(f'已关闭输出文件: {temp_output_file_path}')
 
     def on_complete(self) -> None:
         print('RecognitionCallback completed.')  # recognition completed
@@ -349,11 +350,11 @@ try:
     )
     # 读取文件内容
     try:
-        with open(output_file_path, 'r', encoding='utf-8') as file:
+        with open(temp_output_file_path, 'r', encoding='utf-8') as file:
             text = file.read()
-        print(f"已读取识别结果文件: {output_file_path}")
+        print(f"已读取识别结果文件: {temp_output_file_path}")
     except FileNotFoundError:
-        print(f"识别结果文件不存在: {output_file_path}")
+        print(f"识别结果文件不存在: {temp_output_file_path}")
         # 如果文件不存在，使用空字符串
         text = ""
     except Exception as e:
@@ -390,41 +391,110 @@ try:
             ai_response = response.choices[0].message.content
             print(ai_response)
 
-            # 将AI回复保存到cord_{timestamp}.md文件
+            # 将AI回复保存到临时文件
             try:
-                os.makedirs('data', exist_ok=True)
-                with open(cord_file_path, 'w', encoding='utf-8') as cord_file:
+                os.makedirs('data/MD', exist_ok=True)
+                with open(temp_cord_file_path, 'w', encoding='utf-8') as cord_file:
                     cord_file.write(ai_response)
-                print(f'AI回复已保存到 {cord_file_path} 文件')
+                print(f'AI回复已保存到临时文件: {temp_cord_file_path}')
             except Exception as e:
                 print(f"保存AI回复文件时出错: {e}")
         else:
             print("没有识别到文本，跳过AI分析")
             # 即使没有识别到文本，也创建一个空的AI回复文件
             try:
-                os.makedirs('data', exist_ok=True)
-                with open(cord_file_path, 'w', encoding='utf-8') as cord_file:
+                os.makedirs('data/MD', exist_ok=True)
+                with open(temp_cord_file_path, 'w', encoding='utf-8') as cord_file:
                     cord_file.write("没有识别到文本内容")
-                print(f'已创建空的AI回复文件: {cord_file_path}')
+                print(f'已创建空的AI回复文件: {temp_cord_file_path}')
             except Exception as e:
                 print(f"创建空AI回复文件时出错: {e}")
     except Exception as e:
         print(f"调用DeepSeek API时出错: {e}")
         # 即使API调用失败，也创建一个错误信息文件
         try:
-            os.makedirs('data', exist_ok=True)
-            with open(cord_file_path, 'w', encoding='utf-8') as cord_file:
+            os.makedirs('data/MD', exist_ok=True)
+            with open(temp_cord_file_path, 'w', encoding='utf-8') as cord_file:
                 cord_file.write(f"API调用失败: {str(e)}")
-            print(f'已创建API错误信息文件: {cord_file_path}')
+            print(f'已创建API错误信息文件: {temp_cord_file_path}')
         except Exception as e:
             print(f"创建API错误信息文件时出错: {e}")
 except Exception as e:
     print(f"导入OpenAI模块或初始化时出错: {e}")
     # 即使导入失败，也创建一个错误信息文件
     try:
-        os.makedirs('data', exist_ok=True)
-        with open(cord_file_path, 'w', encoding='utf-8') as cord_file:
+        os.makedirs('data/MD', exist_ok=True)
+        with open(temp_cord_file_path, 'w', encoding='utf-8') as cord_file:
             cord_file.write(f"模块导入失败: {str(e)}")
-        print(f'已创建模块错误信息文件: {cord_file_path}')
+        print(f'已创建模块错误信息文件: {temp_cord_file_path}')
     except Exception as e:
         print(f"创建模块错误信息文件时出错: {e}")
+
+# 重命名文件：根据内容生成文件名
+try:
+    # 检查是否识别到文本
+    if text and len(text.strip()) > 0:
+        print("\n开始根据文件内容生成文件名...")
+        
+        # 构建文件名生成提示
+        filename_prompt = f"请分析以下文本内容，提取最能概括内容的简短关键词（1-3个词），用于作为文件名。\n\n文本内容：{text}\n\n要求：\n1. 关键词必须简洁明了\n2. 不要包含特殊字符\n3. 用中文回答\n4. 直接返回关键词，不要有其他说明"
+        
+        # 调用AI生成文件名关键词
+        try:
+            from openai import OpenAI
+            
+            # 设置DeepSeek API
+            api_key = "sk-c0e2db4baac34732b5fe022aca40961d"
+            base_url = "https://api.deepseek.com"
+            
+            # 创建客户端
+            client = OpenAI(
+                api_key=api_key,
+                base_url=base_url
+            )
+            
+            filename_response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "你是一个文件名生成助手，根据文本内容提取简洁的关键词作为文件名"},
+                    {"role": "user", "content": filename_prompt}
+                ],
+                temperature=0.5,
+                max_tokens=50
+            )
+            
+            # 提取文件名关键词
+            filename_keyword = filename_response.choices[0].message.content.strip()
+            # 清理文件名，移除特殊字符
+            filename_keyword = ''.join(c for c in filename_keyword if c.isalnum() or c == '_' or c == '-' or c == ' ')
+            filename_keyword = filename_keyword.replace(' ', '_')
+            filename_keyword = filename_keyword[:50]  # 限制长度
+            
+            print(f'生成的文件名关键词: {filename_keyword}')
+            
+            # 生成最终文件名
+            final_output_filename = f'{filename_keyword}_{timestamp}.txt'
+            final_output_path = f'data/TXT/{final_output_filename}'
+            
+            final_cord_filename = f'{filename_keyword}_{timestamp}.md'
+            final_cord_path = f'data/MD/{final_cord_filename}'
+            
+            # 重命名文件
+            if os.path.exists(temp_output_file_path):
+                os.rename(temp_output_file_path, final_output_path)
+                print(f'识别结果文件已重命名为: {final_output_path}')
+            
+            if os.path.exists(temp_cord_file_path):
+                os.rename(temp_cord_file_path, final_cord_path)
+                print(f'AI回复文件已重命名为: {final_cord_path}')
+                
+        except Exception as e:
+            print(f"生成文件名时出错: {e}")
+            print(f"使用默认文件名")
+            
+    else:
+        print("没有识别到文本内容，使用默认文件名")
+        
+except Exception as e:
+    print(f"文件重命名过程中出错: {e}")
+    print(f"使用默认文件名")
