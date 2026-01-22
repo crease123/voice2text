@@ -23,7 +23,12 @@ dtype = 'int16'  # data type
 format_pcm = 'pcm'  # format of the audio data
 block_size = 3200  # number of frames per buffer
 # 生成时间戳
-timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+import sys
+# 检查是否有命令行参数传递时间戳
+if len(sys.argv) > 1:
+    timestamp = sys.argv[1]
+else:
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 # 初始文件路径（临时使用）
 temp_output_file_path = f'data/TXT/out_{timestamp}.txt'  # 临时输出文件路径
 temp_cord_file_path = f'data/MD/cord_{timestamp}.md'  # 临时AI回复文件路径

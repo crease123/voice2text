@@ -4,6 +4,7 @@ import subprocess
 import threading
 import time
 import base64
+from datetime import datetime
 
 # 设置页面配置
 st.set_page_config(
@@ -44,18 +45,25 @@ with st.sidebar:
     # 开始录音按钮
     if not st.session_state.recording:
         if st.button("开始录音", key="start_recording", type="primary"):
+            # 生成时间戳用于文件名
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            # 立即设置转录文件路径
+            st.session_state.transcription_file = f'data/TXT/out_{timestamp}.txt'
+            
             st.session_state.recording = True
             st.session_state.output_content = ""
             st.session_state.ai_response = ""
             st.session_state.selected_file = None
             st.session_state.selected_file_content = ""
+            # 添加实时转录结果状态
+            st.session_state.realtime_transcription = ""
             
             # 启动录音进程
             def run_recognition():
-                # 运行main.py并获取进程对象
+                # 运行main.py并获取进程对象，传递时间戳作为参数
                 # 使用更兼容的方式捕获输出，避免capture_output参数在旧Python版本中不可用的问题
                 process = subprocess.Popen(
-                    ["python", "main.py"], 
+                    ["python", "main.py", timestamp], 
                     stdout=subprocess.PIPE, 
                     stderr=subprocess.PIPE, 
                     text=True
@@ -89,9 +97,7 @@ with st.sidebar:
             # 强制页面重新渲染，显示录音中状态
             st.rerun()
     else:
-        st.warning("录音中...")
-        # 显示录音状态
-        st.info("录音进行中，正在识别语音...")
+        
         
         # 添加停止录音按钮
         if st.button("停止录音", key="stop_recording"):
@@ -226,37 +232,29 @@ with st.sidebar:
 
 # 主界面
 if st.session_state.recording:
-    # 录音状态界面
-    st.header("🎤 录音中...")
-    st.info("录音进行中，正在识别语音...")
-    st.warning("请在侧边栏点击停止录音按钮结束录音")
+
     
-    # 显示语音识别文件列表
-    st.subheader("语音识别文件")
-    # 确保data/TXT文件夹存在
-    if not os.path.exists('data/TXT'):
-        os.makedirs('data/TXT', exist_ok=True)
-    # 获取所有.txt文件
-    out_files = [f for f in os.listdir('data/TXT') if f.endswith('.txt')]
-    # 按文件名排序（时间戳倒序）
-    out_files.sort(reverse=True)
+    # 实时转录结果显示
+    st.subheader("📝 实时语音转录")
     
-    if out_files:
-        for file in out_files[:5]:  # 只显示最近5个文件
-            if st.button(f"📝 {file}", key=f"recording_out_{file}"):
-                # 读取文件内容
-                with open(f'data/TXT/{file}', 'r', encoding='utf-8') as f:
-                    content = f.read()
-                # 更新状态
-                st.session_state.selected_file = file
-                st.session_state.selected_file_content = content
-                # 清空录音相关状态
-                st.session_state.output_content = ""
-                st.session_state.ai_response = ""
-                # 强制页面重新渲染
-                st.rerun()
-    else:
-        st.info("暂无语音识别文件")
+
+    # 读取并显示转录结果
+    if st.session_state.transcription_file and os.path.exists(st.session_state.transcription_file):
+        try:
+            with open(st.session_state.transcription_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            if content != st.session_state.realtime_transcription:
+                st.session_state.realtime_transcription = content
+                print(f"更新转录结果: {content}")
+        except Exception as e:
+            print(f"读取转录文件时出错: {e}")
+    
+    # 显示转录结果
+    st.text_area("转录结果", value=st.session_state.realtime_transcription, height=300)
+    
+    # 添加自动刷新机制
+    time.sleep(0.5)  # 短暂延迟，避免刷新过快
+    st.rerun()
 elif st.session_state.show_calendar:
     # 美化日历界面
     st.header("📅 日历")
@@ -519,7 +517,7 @@ else:
     - **AI 分析**：对识别的文本进行智能分析
     - **文件管理**：保存和管理所有录音和分析结果
     - **历史记录**：通过日历查看历史录音文件
-    
+
     ### 使用流程
     1. 在侧边栏点击"开始录音"按钮
     2. 开始说话，系统会实时识别
