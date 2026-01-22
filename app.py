@@ -144,8 +144,8 @@ with st.sidebar:
         # 确保data/TXT文件夹存在
         if not os.path.exists('data/TXT'):
             os.makedirs('data/TXT', exist_ok=True)
-        # 获取所有out_*.txt文件
-        out_files = [f for f in os.listdir('data/TXT') if f.startswith('out_') and f.endswith('.txt')]
+        # 获取所有.txt文件
+        out_files = [f for f in os.listdir('data/TXT') if f.endswith('.txt')]
         # 按文件名排序（时间戳倒序）
         out_files.sort(reverse=True)
         
@@ -168,8 +168,8 @@ with st.sidebar:
         # 确保data/WAV文件夹存在
         if not os.path.exists('data/WAV'):
             os.makedirs('data/WAV', exist_ok=True)
-        # 获取所有audio_*.wav文件
-        audio_files = [f for f in os.listdir('data/WAV') if f.startswith('audio_') and f.endswith('.wav')]
+        # 获取所有.wav文件
+        audio_files = [f for f in os.listdir('data/WAV') if f.endswith('.wav')]
         # 按文件名排序（时间戳倒序）
         audio_files.sort(reverse=True)
         
@@ -192,8 +192,8 @@ with st.sidebar:
         # 确保data/MD文件夹存在
         if not os.path.exists('data/MD'):
             os.makedirs('data/MD', exist_ok=True)
-        # 获取所有cord_*.md文件
-        cord_files = [f for f in os.listdir('data/MD') if f.startswith('cord_') and f.endswith('.md')]
+        # 获取所有.md文件
+        cord_files = [f for f in os.listdir('data/MD') if f.endswith('.md')]
         # 按文件名排序（时间戳倒序）
         cord_files.sort(reverse=True)
         
@@ -226,8 +226,8 @@ if st.session_state.recording:
     # 确保data/TXT文件夹存在
     if not os.path.exists('data/TXT'):
         os.makedirs('data/TXT', exist_ok=True)
-    # 获取所有out_*.txt文件
-    out_files = [f for f in os.listdir('data/TXT') if f.startswith('out_') and f.endswith('.txt')]
+    # 获取所有.txt文件
+    out_files = [f for f in os.listdir('data/TXT') if f.endswith('.txt')]
     # 按文件名排序（时间戳倒序）
     out_files.sort(reverse=True)
     
