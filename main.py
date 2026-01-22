@@ -30,6 +30,10 @@ temp_cord_file_path = f'data/MD/cord_{timestamp}.md'  # 临时AI回复文件路�
 temp_audio_file_path = f'data/WAV/audio_{timestamp}.wav'  # 临时音频文件路径
 audio_file_path = temp_audio_file_path  # 音频文件路径
 
+# 保存当前录音的文件信息到共享文件，供app.py读取
+with open('current_recording.txt', 'w', encoding='utf-8') as f:
+    f.write(temp_output_file_path)
+
 # 提前初始化音频捕获和缓冲区
 p = pyaudio.PyAudio()
 audio_stream = p.open(format=pyaudio.paInt16,
@@ -506,3 +510,12 @@ try:
 except Exception as e:
     print(f"文件重命名过程中出错: {e}")
     print(f"使用默认文件名")
+
+# 清理临时文件
+try:
+    # 清理current_recording.txt文件
+    if os.path.exists('current_recording.txt'):
+        os.remove('current_recording.txt')
+        print("已清理current_recording.txt文件")
+except Exception as e:
+    print(f"清理临时文件时出错: {e}")

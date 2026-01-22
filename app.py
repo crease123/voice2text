@@ -231,8 +231,35 @@ if st.session_state.recording:
     st.info("录音进行中，正在识别语音...")
     st.warning("请在侧边栏点击停止录音按钮结束录音")
     
+    # 添加自动刷新，每1秒刷新一次
+    st.rerun()
+
+    
+    # 显示当前录音的内容
+    st.subheader("当前录音内容")
+    
+    # 尝试读取当前录音文件
+    current_content = ""
+    try:
+        if os.path.exists('current_recording.txt'):
+            with open('current_recording.txt', 'r', encoding='utf-8') as f:
+                current_file_path = f.read().strip()
+            
+            if os.path.exists(current_file_path):
+                with open(current_file_path, 'r', encoding='utf-8') as f:
+                    current_content = f.read()
+                    
+                # 显示当前录音内容
+                st.text_area("实时语音识别结果", current_content, height=300)
+            else:
+                st.info("正在准备录音文件...")
+        else:
+            st.info("正在初始化录音...")
+    except Exception as e:
+        st.error(f"读取录音内容时出错: {e}")
+    
     # 显示语音识别文件列表
-    st.subheader("语音识别文件")
+    st.subheader("历史语音识别文件")
     # 确保data/TXT文件夹存在
     if not os.path.exists('data/TXT'):
         os.makedirs('data/TXT', exist_ok=True)
