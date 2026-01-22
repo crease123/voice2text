@@ -33,6 +33,10 @@ if 'selected_file' not in st.session_state:
     st.session_state.selected_file = None
 if 'selected_file_content' not in st.session_state:
     st.session_state.selected_file_content = ""
+if 'show_calendar' not in st.session_state:
+    st.session_state.show_calendar = False
+if 'viewing_date' not in st.session_state:
+    st.session_state.viewing_date = None
 
 # 侧边栏配置
 with st.sidebar:
@@ -136,8 +140,14 @@ with st.sidebar:
             st.session_state.recording = False
             # 强制页面重新渲染，显示录音结束状态
             st.rerun()
-    
  
+    # 添加日历按钮
+    if st.button("📅 日历", key="calendar_button"):
+        st.session_state.show_calendar = True
+        st.session_state.viewing_date = None
+        st.rerun()
+    
+    st.divider()
     
     # 显示文件列表 - 使用expander实现折叠展开
     with st.expander("📝 语音识别文件", expanded=True):
@@ -247,6 +257,228 @@ if st.session_state.recording:
                 st.rerun()
     else:
         st.info("暂无语音识别文件")
+elif st.session_state.show_calendar:
+    # 美化日历界面
+    st.header("📅 日历")
+    
+    # 获取所有文件的日期和数量
+    def get_file_stats():
+        date_stats = {}
+        # 检查TXT文件
+        if os.path.exists('data/TXT'):
+            for file in os.listdir('data/TXT'):
+                if file.endswith('.txt'):
+                    try:
+                        parts = file.split('_')
+                        for part in parts:
+                            if len(part) == 8 and part.isdigit():
+                                date_str = part
+                                if date_str not in date_stats:
+                                    date_stats[date_str] = 0
+                                date_stats[date_str] += 1
+                                break
+                    except:
+                        pass
+        return date_stats
+    
+    file_stats = get_file_stats()
+    
+    # 生成月历
+    import datetime
+    
+    # 获取当前日期或选中的月份
+    if 'current_month' not in st.session_state:
+        st.session_state.current_month = datetime.datetime.now()
+    
+    # 月份导航 - 美化样式
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        if st.button("← 上个月", key="prev_month", use_container_width=True):
+            st.session_state.current_month = st.session_state.current_month.replace(day=1) - datetime.timedelta(days=1)
+            st.rerun()
+    with col2:
+        st.subheader(f"{st.session_state.current_month.year}年{st.session_state.current_month.month}月")
+    with col3:
+        if st.button("下个月 →", key="next_month", use_container_width=True):
+            # 计算下个月
+            if st.session_state.current_month.month == 12:
+                next_month = st.session_state.current_month.replace(year=st.session_state.current_month.year + 1, month=1, day=1)
+            else:
+                next_month = st.session_state.current_month.replace(month=st.session_state.current_month.month + 1, day=1)
+            st.session_state.current_month = next_month
+            st.rerun()
+    
+    # 生成月份的日历
+    year = st.session_state.current_month.year
+    month = st.session_state.current_month.month
+    
+    # 获取月份第一天是星期几 (0=周一, 6=周日)
+    first_day = datetime.datetime(year, month, 1)
+    first_day_weekday = first_day.weekday()  # 0=周一, 6=周日
+    
+    # 获取月份的天数
+    if month == 12:
+        last_day = datetime.datetime(year + 1, 1, 1) - datetime.timedelta(days=1)
+    else:
+        last_day = datetime.datetime(year, month + 1, 1) - datetime.timedelta(days=1)
+    days_in_month = last_day.day
+    
+    # 创建日历网格 - 美化样式
+    st.write("")
+    
+    # 星期标题 - 美化样式
+    weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+    col_width = [1 for _ in range(7)]
+    cols = st.columns(col_width)
+    for i, day in enumerate(weekdays):
+        cols[i].markdown(f"**{day}**", unsafe_allow_html=True)
+    
+    # 填充日历 - 美化样式
+    day_num = 1
+    week_num = 0
+    
+    while day_num <= days_in_month:
+        cols = st.columns(col_width)
+        
+        # 填充第一周的空白
+        if week_num == 0:
+            for i in range(first_day_weekday):
+                cols[i].write("")
+        
+        # 填充日期 - 美化样式
+        start_col = first_day_weekday if week_num == 0 else 0
+        for i in range(start_col, 7):
+            if day_num > days_in_month:
+                break
+            
+            # 构建日期字符串
+            date_str = f"{year}{month:02d}{day_num:02d}"
+            
+            # 获取当天的txt文件数量
+            file_count = file_stats.get(date_str, 0)
+            
+            # 日期按钮 - 美化样式
+            button_label = f"{day_num}"
+            if file_count > 0:
+                button_label += f"({file_count}次)"
+            
+            # 美化按钮样式
+            button_kwargs = {
+                "key": f"cal_{date_str}",
+                "use_container_width": True,
+                "type": "primary" if file_count > 0 else "secondary"
+            }
+            
+            if cols[i].button(button_label, **button_kwargs):
+                # 直接在主界面显示对应日子的文件，不进入新页面
+                st.session_state.viewing_date = date_str
+                st.session_state.show_calendar = False  # 关闭日历视图
+                st.rerun()
+            
+            day_num += 1
+        week_num += 1
+    
+    # 返回按钮 - 美化样式
+    if st.button("返回主界面", key="back_from_calendar", use_container_width=True):
+        st.session_state.show_calendar = False
+        st.session_state.viewing_date = None
+        st.rerun()
+        
+elif st.session_state.viewing_date:
+    # 显示特定日期的文件 - 美化样式
+    viewing_date = st.session_state.viewing_date
+    year = viewing_date[:4]
+    month = viewing_date[4:6]
+    day = viewing_date[6:8]
+    
+    # 美化标题
+    st.header(f"📁 {year}年{month}月{day}日的文件")
+    
+    # 添加返回日历按钮
+    if st.button("返回日历", key="back_to_calendar", type="secondary"):
+        st.session_state.viewing_date = None
+        st.session_state.show_calendar = True
+        st.rerun()
+    
+    # 获取选中日期的文件
+    def get_files_by_date(date_str):
+        txt_files = []
+        wav_files = []
+        md_files = []
+        
+        # 检查TXT文件
+        if os.path.exists('data/TXT'):
+            for file in os.listdir('data/TXT'):
+                if file.endswith('.txt') and date_str in file:
+                    txt_files.append(file)
+        
+        # 检查WAV文件
+        if os.path.exists('data/WAV'):
+            for file in os.listdir('data/WAV'):
+                if file.endswith('.wav') and date_str in file:
+                    wav_files.append(file)
+        
+        # 检查MD文件
+        if os.path.exists('data/MD'):
+            for file in os.listdir('data/MD'):
+                if file.endswith('.md') and date_str in file:
+                    md_files.append(file)
+        
+        return txt_files, wav_files, md_files
+    
+    txt_files, wav_files, md_files = get_files_by_date(viewing_date)
+    
+    # 美化文件显示
+    if txt_files or wav_files or md_files:
+        # 使用卡片式布局
+        if txt_files:
+            st.subheader("📝 语音识别文件")
+            for file in txt_files:
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"**{file}**")
+                with col2:
+                    if st.button("查看", key=f"view_txt_{file}", type="primary", use_container_width=True):
+                        with open(f'data/TXT/{file}', 'r', encoding='utf-8') as f:
+                            content = f.read()
+                        st.session_state.selected_file = file
+                        st.session_state.selected_file_content = content
+                        st.session_state.viewing_date = None
+                        st.rerun()
+        
+        if wav_files:
+            st.subheader("🎵 音频文件")
+            for file in wav_files:
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"**{file}**")
+                with col2:
+                    if st.button("查看", key=f"view_wav_{file}", type="primary", use_container_width=True):
+                        with open(f'data/WAV/{file}', 'rb') as f:
+                            audio_content = f.read()
+                        st.session_state.selected_file = file
+                        st.session_state.selected_file_content = audio_content
+                        st.session_state.viewing_date = None
+                        st.rerun()
+        
+        if md_files:
+            st.subheader("🤖 AI总结文件")
+            for file in md_files:
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"**{file}**")
+                with col2:
+                    if st.button("查看", key=f"view_md_{file}", type="primary", use_container_width=True):
+                        with open(f'data/MD/{file}', 'r', encoding='utf-8') as f:
+                            content = f.read()
+                        st.session_state.selected_file = file
+                        st.session_state.selected_file_content = content
+                        st.session_state.viewing_date = None
+                        st.rerun()
+    else:
+        # 美化空状态
+        st.info("该日期暂无文件")
+            
 elif st.session_state.selected_file:
     # 显示选中的文件内容
     st.header(f"📝 {st.session_state.selected_file}")
@@ -286,7 +518,7 @@ else:
     - **语音识别**：将您的语音转换为文本
     - **AI 分析**：对识别的文本进行智能分析
     - **文件管理**：保存和管理所有录音和分析结果
-    - **历史记录**：查看和下载历史录音文件
+    - **历史记录**：通过日历查看历史录音文件
     
     ### 使用流程
     1. 在侧边栏点击"开始录音"按钮
@@ -295,5 +527,6 @@ else:
     4. 系统自动进行AI分析
     5. 在侧边栏查看生成的文件
     6. 点击文件查看详细内容
+    7. 使用"日历"功能按日期查看历史文件
     """)
 

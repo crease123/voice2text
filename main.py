@@ -27,7 +27,8 @@ timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 # 初始文件路径（临时使用）
 temp_output_file_path = f'data/TXT/out_{timestamp}.txt'  # 临时输出文件路径
 temp_cord_file_path = f'data/MD/cord_{timestamp}.md'  # 临时AI回复文件路径
-audio_file_path = f'data/WAV/audio_{timestamp}.wav'  # 音频文件路径（保持不变）
+temp_audio_file_path = f'data/WAV/audio_{timestamp}.wav'  # 临时音频文件路径
+audio_file_path = temp_audio_file_path  # 音频文件路径
 
 # 提前初始化音频捕获和缓冲区
 p = pyaudio.PyAudio()
@@ -487,6 +488,13 @@ try:
             if os.path.exists(temp_cord_file_path):
                 os.rename(temp_cord_file_path, final_cord_path)
                 print(f'AI回复文件已重命名为: {final_cord_path}')
+            
+            # 重命名音频文件，使用和txt文件相同的文件名
+            final_audio_filename = f'{filename_keyword}_{timestamp}.wav'
+            final_audio_path = f'data/WAV/{final_audio_filename}'
+            if os.path.exists(temp_audio_file_path):
+                os.rename(temp_audio_file_path, final_audio_path)
+                print(f'音频文件已重命名为: {final_audio_path}')
                 
         except Exception as e:
             print(f"生成文件名时出错: {e}")
