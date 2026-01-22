@@ -24,9 +24,9 @@ format_pcm = 'pcm'  # format of the audio data
 block_size = 3200  # number of frames per buffer
 # 生成时间戳文件名
 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-output_file_path = f'data/out_{timestamp}.txt'  # 输出文件路径
-cord_file_path = f'data/cord_{timestamp}.md'  # AI回复文件路径
-audio_file_path = f'data/audio_{timestamp}.wav'  # 音频文件路径
+output_file_path = f'data/TXT/out_{timestamp}.txt'  # 输出文件路径
+cord_file_path = f'data/MD/cord_{timestamp}.md'  # AI回复文件路径
+audio_file_path = f'data/WAV/audio_{timestamp}.wav'  # 音频文件路径
 
 # 提前初始化音频捕获和缓冲区
 p = pyaudio.PyAudio()

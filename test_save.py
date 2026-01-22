@@ -3,17 +3,19 @@ from datetime import datetime
 
 # 测试文件保存功能
 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-output_file_path = f'data/out_{timestamp}.txt'
-audio_file_path = f'data/audio_{timestamp}.wav'
-cord_file_path = f'data/cord_{timestamp}.md'
+output_file_path = f'data/TXT/out_{timestamp}.txt'
+audio_file_path = f'data/WAV/audio_{timestamp}.wav'
+cord_file_path = f'data/MD/cord_{timestamp}.md'
 
 print(f"测试文件路径:")
 print(f"- 识别结果: {output_file_path}")
 print(f"- 音频文件: {audio_file_path}")
 print(f"- AI回复: {cord_file_path}")
 
-# 确保data文件夹存在
-os.makedirs('data', exist_ok=True)
+# 确保文件夹存在
+os.makedirs('data/TXT', exist_ok=True)
+os.makedirs('data/WAV', exist_ok=True)
+os.makedirs('data/MD', exist_ok=True)
 
 # 测试创建识别结果文件
 try:

@@ -139,78 +139,78 @@ with st.sidebar:
     
  
     
-    # 显示文件列表
-    st.subheader("语音识别文件")
-    # 确保data文件夹存在
-    if not os.path.exists('data'):
-        os.makedirs('data')
-    # 获取所有out_*.txt文件
-    out_files = [f for f in os.listdir('data') if f.startswith('out_') and f.endswith('.txt')]
-    # 按文件名排序（时间戳倒序）
-    out_files.sort(reverse=True)
-    
-    if out_files:
-        for file in out_files:
-            if st.button(f"📝 {file}", key=f"out_{file}"):
-                # 读取文件内容
-                with open(f'data/{file}', 'r', encoding='utf-8') as f:
-                    content = f.read()
-                # 更新状态
-                st.session_state.selected_file = file
-                st.session_state.selected_file_content = content
-                # 清空录音相关状态
-                st.session_state.output_content = ""
-                st.session_state.ai_response = ""
-    else:
-        st.info("暂无语音识别文件")
+    # 显示文件列表 - 使用expander实现折叠展开
+    with st.expander("📝 语音识别文件", expanded=True):
+        # 确保data/TXT文件夹存在
+        if not os.path.exists('data/TXT'):
+            os.makedirs('data/TXT', exist_ok=True)
+        # 获取所有out_*.txt文件
+        out_files = [f for f in os.listdir('data/TXT') if f.startswith('out_') and f.endswith('.txt')]
+        # 按文件名排序（时间戳倒序）
+        out_files.sort(reverse=True)
+        
+        if out_files:
+            for file in out_files:
+                if st.button(f"{file}", key=f"out_{file}"):
+                    # 读取文件内容
+                    with open(f'data/TXT/{file}', 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    # 更新状态
+                    st.session_state.selected_file = file
+                    st.session_state.selected_file_content = content
+                    # 清空录音相关状态
+                    st.session_state.output_content = ""
+                    st.session_state.ai_response = ""
+        else:
+            st.info("暂无语音识别文件")
 
-    st.divider()
-    
-    # 显示音频文件列表
-    st.subheader("音频文件")
-    # 获取所有audio_*.wav文件
-    audio_files = [f for f in os.listdir('data') if f.startswith('audio_') and f.endswith('.wav')]
-    # 按文件名排序（时间戳倒序）
-    audio_files.sort(reverse=True)
-    
-    if audio_files:
-        for file in audio_files:
-            if st.button(f"🎵 {file}", key=f"audio_{file}"):
-                # 读取文件内容
-                with open(f'data/{file}', 'rb') as f:
-                    audio_content = f.read()
-                # 更新状态
-                st.session_state.selected_file = file
-                st.session_state.selected_file_content = audio_content
-                # 清空录音相关状态
-                st.session_state.output_content = ""
-                st.session_state.ai_response = ""
-    else:
-        st.info("暂无音频文件")
+    with st.expander("🎵 音频文件", expanded=True):
+        # 确保data/WAV文件夹存在
+        if not os.path.exists('data/WAV'):
+            os.makedirs('data/WAV', exist_ok=True)
+        # 获取所有audio_*.wav文件
+        audio_files = [f for f in os.listdir('data/WAV') if f.startswith('audio_') and f.endswith('.wav')]
+        # 按文件名排序（时间戳倒序）
+        audio_files.sort(reverse=True)
+        
+        if audio_files:
+            for file in audio_files:
+                if st.button(f"{file}", key=f"audio_{file}"):
+                    # 读取文件内容
+                    with open(f'data/WAV/{file}', 'rb') as f:
+                        audio_content = f.read()
+                    # 更新状态
+                    st.session_state.selected_file = file
+                    st.session_state.selected_file_content = audio_content
+                    # 清空录音相关状态
+                    st.session_state.output_content = ""
+                    st.session_state.ai_response = ""
+        else:
+            st.info("暂无音频文件")
 
-    st.divider()
-
-    # 显示AI回复文件列表
-    st.subheader("AI回复文件")
-    # 获取所有cord_*.md文件
-    cord_files = [f for f in os.listdir('data') if f.startswith('cord_') and f.endswith('.md')]
-    # 按文件名排序（时间戳倒序）
-    cord_files.sort(reverse=True)
-    
-    if cord_files:
-        for file in cord_files:
-            if st.button(f"🤖 {file}", key=f"cord_{file}"):
-                # 读取文件内容
-                with open(f'data/{file}', 'r', encoding='utf-8') as f:
-                    content = f.read()
-                # 更新状态
-                st.session_state.selected_file = file
-                st.session_state.selected_file_content = content
-                # 清空录音相关状态
-                st.session_state.output_content = ""
-                st.session_state.ai_response = ""
-    else:
-        st.info("暂无AI回复文件")
+    with st.expander("🤖 AI总结文件", expanded=True):
+        # 确保data/MD文件夹存在
+        if not os.path.exists('data/MD'):
+            os.makedirs('data/MD', exist_ok=True)
+        # 获取所有cord_*.md文件
+        cord_files = [f for f in os.listdir('data/MD') if f.startswith('cord_') and f.endswith('.md')]
+        # 按文件名排序（时间戳倒序）
+        cord_files.sort(reverse=True)
+        
+        if cord_files:
+            for file in cord_files:
+                if st.button(f"{file}", key=f"cord_{file}"):
+                    # 读取文件内容
+                    with open(f'data/MD/{file}', 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    # 更新状态
+                    st.session_state.selected_file = file
+                    st.session_state.selected_file_content = content
+                    # 清空录音相关状态
+                    st.session_state.output_content = ""
+                    st.session_state.ai_response = ""
+        else:
+            st.info("暂无AI回复文件")
 
 
 
@@ -223,11 +223,11 @@ if st.session_state.recording:
     
     # 显示语音识别文件列表
     st.subheader("语音识别文件")
-    # 确保data文件夹存在
-    if not os.path.exists('data'):
-        os.makedirs('data')
+    # 确保data/TXT文件夹存在
+    if not os.path.exists('data/TXT'):
+        os.makedirs('data/TXT', exist_ok=True)
     # 获取所有out_*.txt文件
-    out_files = [f for f in os.listdir('data') if f.startswith('out_') and f.endswith('.txt')]
+    out_files = [f for f in os.listdir('data/TXT') if f.startswith('out_') and f.endswith('.txt')]
     # 按文件名排序（时间戳倒序）
     out_files.sort(reverse=True)
     
@@ -235,7 +235,7 @@ if st.session_state.recording:
         for file in out_files[:5]:  # 只显示最近5个文件
             if st.button(f"📝 {file}", key=f"recording_out_{file}"):
                 # 读取文件内容
-                with open(f'data/{file}', 'r', encoding='utf-8') as f:
+                with open(f'data/TXT/{file}', 'r', encoding='utf-8') as f:
                     content = f.read()
                 # 更新状态
                 st.session_state.selected_file = file
